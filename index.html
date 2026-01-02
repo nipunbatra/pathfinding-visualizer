@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pathfinding Algorithm Visualizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #0f0f1a;
+            min-height: 100vh;
+            color: #e0e0e0;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 320px;
+            background: #1a1a2e;
+            border-right: 1px solid #2a2a4a;
+            padding: 20px;
+            overflow-y: auto;
+            flex-shrink: 0;
+            max-height: 100vh;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            overflow: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #fff;
+        }
+
+        .subtitle {
+            font-size: 0.75rem;
+            color: #888;
+            margin-bottom: 25px;
+        }
+
+        .control-section {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #2a2a4a;
+        }
+
+        .control-section:last-child {
+            border-bottom: none;
+        }
+
+        .section-label {
+            font-size: 0.7rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        select, button {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 6px;
+            border: 1px solid #3a3a5a;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: #252540;
+            color: #e0e0e0;
+            font-family: inherit;
+        }
+
+        select:hover, button:hover:not(:disabled) {
+            border-color: #4a4a7a;
+            background: #2a2a45;
+        }
+
+        select:focus, button:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+
+        select option {
+            background: #1a1a2e;
+            color: #e0e0e0;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .button-group button {
+            width: auto;
+        }
+
+        .btn-primary {
+            background: #6366f1;
+            border-color: #6366f1;
+            color: #fff;
+            font-weight: 500;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #5558e3;
+        }
+
+        .btn-secondary {
+            background: #3a3a5a;
+            border-color: #3a3a5a;
+            color: #e0e0e0;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #4a4a6a;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            border-color: #ef4444;
+            color: #fff;
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            background: #dc2626;
+        }
+
+        .btn-stop {
+            background: #f59e0b;
+            border-color: #f59e0b;
+            color: #fff;
+        }
+
+        .btn-stop:hover:not(:disabled) {
+            background: #d97706;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .mode-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+
+        .mode-btn {
+            padding: 8px 12px;
+            font-size: 0.8rem;
+            background: #252540;
+            border: 1px solid #3a3a5a;
+            color: #888;
+        }
+
+        .mode-btn.active {
+            background: #6366f1;
+            border-color: #6366f1;
+            color: #fff;
+        }
+
+        .slider-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .slider-group label {
+            flex: 1;
+            font-size: 0.8rem;
+            color: #aaa;
+        }
+
+        .slider-group input {
+            flex: 1;
+            height: 4px;
+            border-radius: 2px;
+            background: #3a3a5a;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider-group input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #6366f1;
+            cursor: pointer;
+        }
+
+        .slider-group input::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #6366f1;
+            cursor: pointer;
+            border: none;
+        }
+
+        .slider-value {
+            width: 50px;
+            text-align: right;
+            font-size: 0.75rem;
+            color: #888;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .stat {
+            background: #252540;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #6366f1;
+        }
+
+        .stat-label {
+            font-size: 0.65rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+        }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-box {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+        }
+
+        .legend-text {
+            font-size: 0.75rem;
+            color: #888;
+        }
+
+        .legend-box.start { background: #22c55e; }
+        .legend-box.end { background: #ef4444; }
+        .legend-box.wall { background: #374151; }
+        .legend-box.visited { background: #8b5cf6; }
+        .legend-box.path { background: #f59e0b; }
+
+        #grid {
+            display: grid;
+            gap: 1px;
+            background: #2a2a4a;
+            margin: 0 auto;
+            width: fit-content;
+        }
+
+        .cell {
+            width: 22px;
+            height: 22px;
+            background: #1a1a2e;
+            cursor: pointer;
+            transition: background 0.05s ease;
+        }
+
+        .cell:hover {
+            background: #2a2a45;
+        }
+
+        .cell.start { background: #22c55e; }
+        .cell.end { background: #ef4444; }
+        .cell.wall { background: #374151; }
+        .cell.visited {
+            background: #8b5cf6;
+            animation: visitedAnim 0.2s ease;
+        }
+        .cell.path {
+            background: #f59e0b;
+            animation: pathAnim 0.3s ease;
+        }
+
+        @keyframes visitedAnim {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes pathAnim {
+            0% { transform: scale(0.6); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .info-panel {
+            background: #252540;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 0.8rem;
+            line-height: 1.5;
+        }
+
+        .info-panel h3 {
+            font-size: 0.9rem;
+            color: #6366f1;
+            margin-bottom: 8px;
+        }
+
+        .info-panel p {
+            color: #aaa;
+            margin-bottom: 10px;
+        }
+
+        .info-panel ul {
+            color: #aaa;
+            padding-left: 20px;
+            margin-bottom: 10px;
+        }
+
+        .info-panel li {
+            margin-bottom: 4px;
+        }
+
+        .complexity {
+            display: inline-block;
+            background: #1a1a2e;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: #6366f1;
+        }
+
+        .algorithm-info {
+            display: none;
+        }
+
+        .algorithm-info.active {
+            display: block;
+        }
+
+        .status {
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            text-align: center;
+            margin-bottom: 15px;
+            background: #252540;
+            color: #888;
+        }
+
+        .status.running {
+            background: #1e3a5f;
+            color: #60a5fa;
+        }
+
+        .status.success {
+            background: #1a3d1e;
+            color: #4ade80;
+        }
+
+        .status.error {
+            background: #3d1a1a;
+            color: #f87171;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h1>Pathfinding Visualizer</h1>
+        <p class="subtitle">Algorithm Visualization Tool</p>
+
+        <div class="status" id="status">Ready to visualize</div>
+
+        <div class="control-section">
+            <div class="section-label">Algorithm</div>
+            <select id="algorithm">
+                <option value="bfs">Breadth-First Search (BFS)</option>
+                <option value="dfs">Depth-First Search (DFS)</option>
+                <option value="astar">A* Search</option>
+                <option value="dijkstra">Dijkstra's Algorithm</option>
+                <option value="greedy">Greedy Best-First</option>
+                <option value="bidirectional">Bidirectional BFS</option>
+            </select>
+        </div>
+
+        <div class="control-section">
+            <div class="section-label">Draw Mode</div>
+            <div class="mode-selector">
+                <button class="mode-btn active" data-mode="wall">Wall</button>
+                <button class="mode-btn" data-mode="start">Start</button>
+                <button class="mode-btn" data-mode="end">End</button>
+                <button class="mode-btn" data-mode="erase">Erase</button>
+            </div>
+        </div>
+
+        <div class="control-section">
+            <div class="section-label">Animation Speed</div>
+            <div class="slider-group">
+                <label>Fast</label>
+                <input type="range" id="speed" min="1" max="100" value="70">
+                <label>Slow</label>
+            </div>
+            <div class="slider-value" id="speedValue">Speed: 70</div>
+        </div>
+
+        <div class="control-section">
+            <div class="section-label">Grid Size</div>
+            <div class="slider-group">
+                <label>Small</label>
+                <input type="range" id="gridSize" min="10" max="50" value="30">
+                <label>Large</label>
+            </div>
+            <div class="slider-value" id="gridSizeValue">30 x 30</div>
+        </div>
+
+        <div class="control-section">
+            <div class="section-label">Actions</div>
+            <button class="btn-primary" id="visualizeBtn">Visualize</button>
+            <button class="btn-stop" id="stopBtn" style="display: none;">Stop</button>
+            <div class="button-group" style="margin-top: 10px;">
+                <button class="btn-secondary" id="randomMazeBtn">Random Maze</button>
+                <button class="btn-danger" id="clearBtn">Clear All</button>
+            </div>
+            <button class="btn-secondary" id="clearPathBtn">Clear Path Only</button>
+        </div>
+
+        <div class="control-section">
+            <div class="section-label">Statistics</div>
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-value" id="visitedCount">0</div>
+                    <div class="stat-label">Visited</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="pathLength">0</div>
+                    <div class="stat-label">Path Length</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="timeTaken">0ms</div>
+                    <div class="stat-label">Time</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="efficiency">0%</div>
+                    <div class="stat-label">Efficiency</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="control-section">
+            <div class="section-label">Algorithm Info</div>
+            <div class="info-panel">
+                <div id="bfsInfo" class="algorithm-info active">
+                    <h3>Breadth-First Search</h3>
+                    <p>Explores layer by layer, guaranteeing shortest path in unweighted graphs.</p>
+                    <ul>
+                        <li>Uses Queue (FIFO)</li>
+                        <li>Optimal for unweighted graphs</li>
+                    </ul>
+                    <div class="complexity">O(V + E)</div>
+                </div>
+
+                <div id="dfsInfo" class="algorithm-info">
+                    <h3>Depth-First Search</h3>
+                    <p>Explores deep before wide. No shortest path guarantee.</p>
+                    <ul>
+                        <li>Uses Stack (LIFO)</li>
+                        <li>Lower memory usage</li>
+                    </ul>
+                    <div class="complexity">O(V + E)</div>
+                </div>
+
+                <div id="astarInfo" class="algorithm-info">
+                    <h3>A* Search</h3>
+                    <p>Combines actual cost and heuristic for efficient pathfinding.</p>
+                    <ul>
+                        <li>f(n) = g(n) + h(n)</li>
+                        <li>Manhattan distance heuristic</li>
+                        <li>Optimal and complete</li>
+                    </ul>
+                    <div class="complexity">O(E)</div>
+                </div>
+
+                <div id="dijkstraInfo" class="algorithm-info">
+                    <h3>Dijkstra's Algorithm</h3>
+                    <p>Always expands node with lowest cost from start.</p>
+                    <ul>
+                        <li>Works with weighted graphs</li>
+                        <li>A* with h = 0</li>
+                    </ul>
+                    <div class="complexity">O((V+E) log V)</div>
+                </div>
+
+                <div id="greedyInfo" class="algorithm-info">
+                    <h3>Greedy Best-First</h3>
+                    <p>Uses only heuristic to goal. Fast but not optimal.</p>
+                    <ul>
+                        <li>Fast execution</li>
+                        <li>No optimality guarantee</li>
+                    </ul>
+                    <div class="complexity">O(b^m)</div>
+                </div>
+
+                <div id="bidirectionalInfo" class="algorithm-info">
+                    <h3>Bidirectional BFS</h3>
+                    <p>Searches from both start and end simultaneously.</p>
+                    <ul>
+                        <li>Faster than regular BFS</li>
+                        <li>Guarantees shortest path</li>
+                    </ul>
+                    <div class="complexity">O(b^(d/2))</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-box start"></div>
+                <span class="legend-text">Start</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box end"></div>
+                <span class="legend-text">End</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box wall"></div>
+                <span class="legend-text">Wall</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box visited"></div>
+                <span class="legend-text">Visited</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box path"></div>
+                <span class="legend-text">Path</span>
+            </div>
+        </div>
+        <div id="grid"></div>
+    </div>
+
+    <script>
+        // Min-Heap for efficient priority queue operations
+        class MinHeap {
+            constructor() {
+                this.heap = [];
+                this.size = 0;
+            }
+
+            push(item, priority) {
+                this.heap.push({ item, priority });
+                this.size++;
+                this.bubbleUp(this.size - 1);
+            }
+
+            pop() {
+                if (this.size === 0) return null;
+                const min = this.heap[0];
+                const last = this.heap.pop();
+                this.size--;
+                if (this.size > 0) {
+                    this.heap[0] = last;
+                    this.bubbleDown(0);
+                }
+                return min.item;
+            }
+
+            peek() {
+                return this.size > 0 ? this.heap[0].item : null;
+            }
+
+            isEmpty() {
+                return this.size === 0;
+            }
+
+            bubbleUp(index) {
+                while (index > 0) {
+                    const parentIndex = Math.floor((index - 1) / 2);
+                    if (this.heap[parentIndex].priority <= this.heap[index].priority) break;
+                    [this.heap[parentIndex], this.heap[index]] = [this.heap[index], this.heap[parentIndex]];
+                    index = parentIndex;
+                }
+            }
+
+            bubbleDown(index) {
+                while (true) {
+                    const leftChild = 2 * index + 1;
+                    const rightChild = 2 * index + 2;
+                    let smallest = index;
+
+                    if (leftChild < this.size && this.heap[leftChild].priority < this.heap[smallest].priority) {
+                        smallest = leftChild;
+                    }
+                    if (rightChild < this.size && this.heap[rightChild].priority < this.heap[smallest].priority) {
+                        smallest = rightChild;
+                    }
+
+                    if (smallest === index) break;
+                    [this.heap[index], this.heap[smallest]] = [this.heap[smallest], this.heap[index]];
+                    index = smallest;
+                }
+            }
+        }
+
+        let grid = [];
+        let rows = 30;
+        let cols = 30;
+        let startNode = { row: 5, col: 5 };
+        let endNode = { row: 24, col: 24 };
+        let isRunning = false;
+        let shouldStop = false;
+        let isMouseDown = false;
+        let currentMode = 'wall';
+        let animationSpeed = 30;
+        let batchSize = 1;
+
+        const gridElement = document.getElementById('grid');
+        const algorithmSelect = document.getElementById('algorithm');
+        const speedSlider = document.getElementById('speed');
+        const speedValue = document.getElementById('speedValue');
+        const gridSizeSlider = document.getElementById('gridSize');
+        const gridSizeValue = document.getElementById('gridSizeValue');
+        const visualizeBtn = document.getElementById('visualizeBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const randomMazeBtn = document.getElementById('randomMazeBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const clearPathBtn = document.getElementById('clearPathBtn');
+        const visitedCountEl = document.getElementById('visitedCount');
+        const pathLengthEl = document.getElementById('pathLength');
+        const timeTakenEl = document.getElementById('timeTaken');
+        const efficiencyEl = document.getElementById('efficiency');
+        const statusEl = document.getElementById('status');
+        const modeButtons = document.querySelectorAll('.mode-btn');
+
+        function updateStatus(message, type = '') {
+            statusEl.textContent = message;
+            statusEl.className = 'status ' + type;
+        }
+
+        function initGrid() {
+            grid = [];
+            gridElement.innerHTML = '';
+            gridElement.style.gridTemplateColumns = `repeat(${cols}, 22px)`;
+
+            for (let row = 0; row < rows; row++) {
+                grid[row] = [];
+                for (let col = 0; col < cols; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+                    cell.addEventListener('mousedown', handleMouseDown);
+                    cell.addEventListener('mouseenter', handleMouseEnter);
+                    gridElement.appendChild(cell);
+                    grid[row][col] = {
+                        element: cell,
+                        isWall: false,
+                        isStart: row === startNode.row && col === startNode.col,
+                        isEnd: row === endNode.row && col === endNode.col
+                    };
+                    if (grid[row][col].isStart) cell.classList.add('start');
+                    if (grid[row][col].isEnd) cell.classList.add('end');
+                }
+            }
+        }
+
+        function handleMouseDown(e) {
+            if (isRunning) return;
+            isMouseDown = true;
+            handleCellInteraction(e.target);
+        }
+
+        function handleMouseEnter(e) {
+            if (isRunning || !isMouseDown) return;
+            handleCellInteraction(e.target);
+        }
+
+        function handleCellInteraction(cell) {
+            const row = parseInt(cell.dataset.row);
+            const col = parseInt(cell.dataset.col);
+
+            if (currentMode === 'start') {
+                if (grid[row][col].isEnd) return;
+                grid[startNode.row][startNode.col].element.classList.remove('start');
+                grid[startNode.row][startNode.col].isStart = false;
+                startNode = { row, col };
+                cell.classList.add('start');
+                grid[row][col].isStart = true;
+                grid[row][col].isWall = false;
+                cell.classList.remove('wall');
+            } else if (currentMode === 'end') {
+                if (grid[row][col].isStart) return;
+                grid[endNode.row][endNode.col].element.classList.remove('end');
+                grid[endNode.row][endNode.col].isEnd = false;
+                endNode = { row, col };
+                cell.classList.add('end');
+                grid[row][col].isEnd = true;
+                grid[row][col].isWall = false;
+                cell.classList.remove('wall');
+            } else if (currentMode === 'wall') {
+                if (!grid[row][col].isStart && !grid[row][col].isEnd) {
+                    grid[row][col].isWall = true;
+                    cell.classList.add('wall');
+                }
+            } else if (currentMode === 'erase') {
+                grid[row][col].isWall = false;
+                cell.classList.remove('wall');
+            }
+        }
+
+        function getNeighbors(node) {
+            const neighbors = [];
+            const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+            for (const [dr, dc] of directions) {
+                const newRow = node.row + dr;
+                const newCol = node.col + dc;
+                if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols) {
+                    if (!grid[newRow][newCol].isWall) {
+                        neighbors.push({ row: newRow, col: newCol });
+                    }
+                }
+            }
+            return neighbors;
+        }
+
+        function manhattanDistance(a, b) {
+            return Math.abs(a.row - b.row) + Math.abs(a.col - b.col);
+        }
+
+        function nodeKey(node) {
+            return `${node.row},${node.col}`;
+        }
+
+        function markVisited(row, col) {
+            if (!grid[row][col].isStart && !grid[row][col].isEnd) {
+                grid[row][col].element.classList.add('visited');
+            }
+        }
+
+        const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+        function resetPath() {
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    grid[row][col].element.classList.remove('visited', 'path');
+                }
+            }
+            visitedCountEl.textContent = '0';
+            pathLengthEl.textContent = '0';
+            timeTakenEl.textContent = '0ms';
+            efficiencyEl.textContent = '0%';
+        }
+
+        async function animatePath(path) {
+            for (const node of path) {
+                if (shouldStop) return;
+                if (!grid[node.row][node.col].isStart && !grid[node.row][node.col].isEnd) {
+                    grid[node.row][node.col].element.classList.remove('visited');
+                    grid[node.row][node.col].element.classList.add('path');
+                }
+                await sleep(20);
+            }
+        }
+
+        function reconstructPath(parent, end) {
+            const path = [];
+            let current = end;
+            while (current) {
+                path.unshift(current);
+                current = parent.get(nodeKey(current));
+            }
+            return path;
+        }
+
+        // ==================== CORRECT ALGORITHMS ====================
+
+        // BFS - Layer by layer exploration, guarantees shortest path
+        async function bfs() {
+            const queue = [startNode];
+            const visited = new Set([nodeKey(startNode)]);
+            const parent = new Map();
+            let visitedCount = 0;
+
+            while (queue.length > 0 && !shouldStop) {
+                const current = queue.shift();
+                visitedCount++;
+
+                // Mark current as visited
+                markVisited(current.row, current.col);
+
+                // Check if reached goal
+                if (current.row === endNode.row && current.col === endNode.col) {
+                    return { path: reconstructPath(parent, current), visitedCount };
+                }
+
+                // Add unvisited neighbors to queue
+                for (const neighbor of getNeighbors(current)) {
+                    const key = nodeKey(neighbor);
+                    if (!visited.has(key)) {
+                        visited.add(key);
+                        parent.set(key, current);
+                        queue.push(neighbor);
+                    }
+                }
+
+                // Animation delay
+                if (visitedCount % batchSize === 0 && animationSpeed > 0) {
+                    await sleep(animationSpeed);
+                }
+            }
+            return { path: null, visitedCount };
+        }
+
+        // DFS - Deep exploration first, NO shortest path guarantee
+        async function dfs() {
+            const stack = [startNode];
+            const visited = new Set();
+            const parent = new Map();
+            let visitedCount = 0;
+
+            while (stack.length > 0 && !shouldStop) {
+                const current = stack.pop();
+                const key = nodeKey(current);
+
+                // Skip if already visited
+                if (visited.has(key)) continue;
+                visited.add(key);
+                visitedCount++;
+
+                // Mark as visited
+                markVisited(current.row, current.col);
+
+                // Check if reached goal
+                if (current.row === endNode.row && current.col === endNode.col) {
+                    return { path: reconstructPath(parent, current), visitedCount };
+                }
+
+                // Add neighbors to stack (reverse order for natural exploration)
+                const neighbors = getNeighbors(current);
+                for (let i = neighbors.length - 1; i >= 0; i--) {
+                    const neighbor = neighbors[i];
+                    const neighborKey = nodeKey(neighbor);
+                    if (!visited.has(neighborKey)) {
+                        parent.set(neighborKey, current);
+                        stack.push(neighbor);
+                    }
+                }
+
+                // Animation delay
+                if (visitedCount % batchSize === 0 && animationSpeed > 0) {
+                    await sleep(animationSpeed);
+                }
+            }
+            return { path: null, visitedCount };
+        }
+
+        // A* Search - Uses f(n) = g(n) + h(n), guarantees shortest path with admissible heuristic
+        async function astar() {
+            const openSet = new MinHeap();
+            const closedSet = new Set(); // Nodes already evaluated
+            const gScore = new Map(); // Cost from start to node
+            const parent = new Map();
+            let visitedCount = 0;
+
+            // Initialize start node
+            const startKey = nodeKey(startNode);
+            gScore.set(startKey, 0);
+            const fScore = manhattanDistance(startNode, endNode);
+            openSet.push(startNode, fScore);
+
+            while (!openSet.isEmpty() && !shouldStop) {
+                const current = openSet.pop();
+                const currentKey = nodeKey(current);
+
+                // Skip if already evaluated
+                if (closedSet.has(currentKey)) continue;
+                closedSet.add(currentKey);
+                visitedCount++;
+
+                // Mark as visited
+                markVisited(current.row, current.col);
+
+                // Check if reached goal
+                if (current.row === endNode.row && current.col === endNode.col) {
+                    return { path: reconstructPath(parent, current), visitedCount };
+                }
+
+                // Get current g-score
+                const currentG = gScore.get(currentKey);
+
+                // Evaluate neighbors
+                for (const neighbor of getNeighbors(current)) {
+                    const neighborKey = nodeKey(neighbor);
+
+                    // Skip if already evaluated
+                    if (closedSet.has(neighborKey)) continue;
+
+                    // Calculate tentative g-score
+                    const tentativeG = currentG + 1;
+
+                    // If this path is better than any previous one
+                    if (tentativeG < (gScore.get(neighborKey) || Infinity)) {
+                        parent.set(neighborKey, current);
+                        gScore.set(neighborKey, tentativeG);
+                        const fScore = tentativeG + manhattanDistance(neighbor, endNode);
+                        openSet.push(neighbor, fScore);
+                    }
+                }
+
+                // Animation delay
+                if (visitedCount % batchSize === 0 && animationSpeed > 0) {
+                    await sleep(animationSpeed);
+                }
+            }
+            return { path: null, visitedCount };
+        }
+
+        // Dijkstra - Always expands node with lowest cost from start
+        async function dijkstra() {
+            const openSet = new MinHeap();
+            const visited = new Set();
+            const dist = new Map(); // Distance from start
+            const parent = new Map();
+            let visitedCount = 0;
+
+            // Initialize start node
+            const startKey = nodeKey(startNode);
+            dist.set(startKey, 0);
+            openSet.push(startNode, 0);
+
+            while (!openSet.isEmpty() && !shouldStop) {
+                const current = openSet.pop();
+                const currentKey = nodeKey(current);
+
+                // Skip if already visited
+                if (visited.has(currentKey)) continue;
+                visited.add(currentKey);
+                visitedCount++;
+
+                // Mark as visited
+                markVisited(current.row, current.col);
+
+                // Check if reached goal
+                if (current.row === endNode.row && current.col === endNode.col) {
+                    return { path: reconstructPath(parent, current), visitedCount };
+                }
+
+                // Get current distance
+                const currentDist = dist.get(currentKey);
+
+                // Evaluate neighbors
+                for (const neighbor of getNeighbors(current)) {
+                    const neighborKey = nodeKey(neighbor);
+
+                    // Skip if already visited
+                    if (visited.has(neighborKey)) continue;
+
+                    // Calculate new distance
+                    const newDist = currentDist + 1;
+
+                    // If this path is better
+                    if (newDist < (dist.get(neighborKey) || Infinity)) {
+                        parent.set(neighborKey, current);
+                        dist.set(neighborKey, newDist);
+                        openSet.push(neighbor, newDist);
+                    }
+                }
+
+                // Animation delay
+                if (visitedCount % batchSize === 0 && animationSpeed > 0) {
+                    await sleep(animationSpeed);
+                }
+            }
+            return { path: null, visitedCount };
+        }
+
+        // Greedy Best-First - Uses only heuristic, fast but not optimal
+        async function greedy() {
+            const openSet = new MinHeap();
+            const visited = new Set();
+            const parent = new Map();
+            let visitedCount = 0;
+
+            // Initialize with start node (priority = heuristic to goal)
+            openSet.push(startNode, manhattanDistance(startNode, endNode));
+
+            while (!openSet.isEmpty() && !shouldStop) {
+                const current = openSet.pop();
+                const currentKey = nodeKey(current);
+
+                // Skip if already visited
+                if (visited.has(currentKey)) continue;
+                visited.add(currentKey);
+                visitedCount++;
+
+                // Mark as visited
+                markVisited(current.row, current.col);
+
+                // Check if reached goal
+                if (current.row === endNode.row && current.col === endNode.col) {
+                    return { path: reconstructPath(parent, current), visitedCount };
+                }
+
+                // Add neighbors with heuristic as priority
+                for (const neighbor of getNeighbors(current)) {
+                    const neighborKey = nodeKey(neighbor);
+                    if (!visited.has(neighborKey)) {
+                        parent.set(neighborKey, current);
+                        const h = manhattanDistance(neighbor, endNode);
+                        openSet.push(neighbor, h);
+                    }
+                }
+
+                // Animation delay
+                if (visitedCount % batchSize === 0 && animationSpeed > 0) {
+                    await sleep(animationSpeed);
+                }
+            }
+            return { path: null, visitedCount };
+        }
+
+        // Bidirectional BFS - Search from both directions
+        async function bidirectional() {
+            const queueA = [startNode];
+            const queueB = [endNode];
+            const visitedA = new Set([nodeKey(startNode)]);
+            const visitedB = new Set([nodeKey(endNode)]);
+            const parentA = new Map();
+            const parentB = new Map();
+            let visitedCount = 0;
+
+            while (queueA.length > 0 && queueB.length > 0 && !shouldStop) {
+                const currentA = queueA.shift();
+                const currentB = queueB.shift();
+                visitedCount += 2;
+
+                // Mark both as visited
+                markVisited(currentA.row, currentA.col);
+                markVisited(currentB.row, currentB.col);
+
+                const keyA = nodeKey(currentA);
+                const keyB = nodeKey(currentB);
+
+                // Check if paths meet
+                if (visitedB.has(keyA)) {
+                    return { path: connectBidirectionalPaths(parentA, parentB, currentA), visitedCount };
+                }
+                if (visitedA.has(keyB)) {
+                    return { path: connectBidirectionalPaths(parentA, parentB, currentB), visitedCount };
+                }
+
+                // Expand from A side
+                for (const neighbor of getNeighbors(currentA)) {
+                    const nKey = nodeKey(neighbor);
+                    if (!visitedA.has(nKey)) {
+                        visitedA.add(nKey);
+                        parentA.set(nKey, currentA);
+                        queueA.push(neighbor);
+                    }
+                }
+
+                // Expand from B side
+                for (const neighbor of getNeighbors(currentB)) {
+                    const nKey = nodeKey(neighbor);
+                    if (!visitedB.has(nKey)) {
+                        visitedB.add(nKey);
+                        parentB.set(nKey, currentB);
+                        queueB.push(neighbor);
+                    }
+                }
+
+                // Animation delay
+                if (visitedCount % batchSize === 0 && animationSpeed > 0) {
+                    await sleep(animationSpeed);
+                }
+            }
+            return { path: null, visitedCount };
+        }
+
+        function connectBidirectionalPaths(parentA, parentB, meetingPoint) {
+            const pathA = [];
+            const pathB = [];
+            let current = meetingPoint;
+
+            // Build path from start to meeting point
+            while (current) {
+                pathA.unshift(current);
+                current = parentA.get(nodeKey(current));
+            }
+
+            // Build path from end to meeting point
+            current = meetingPoint;
+            while (current) {
+                pathB.push(current);
+                current = parentB.get(nodeKey(current));
+            }
+
+            // Remove duplicate meeting point from pathB
+            pathB.pop();
+            return [...pathA, ...pathB];
+        }
+
+        async function visualize() {
+            if (isRunning) return;
+            isRunning = true;
+            shouldStop = false;
+            visualizeBtn.style.display = 'none';
+            stopBtn.style.display = 'block';
+            randomMazeBtn.disabled = true;
+            clearBtn.disabled = true;
+            clearPathBtn.disabled = true;
+            gridSizeSlider.disabled = true;
+            algorithmSelect.disabled = true;
+
+            resetPath();
+            updateStatus('Running algorithm...', 'running');
+
+            const algorithm = algorithmSelect.value;
+            const startTime = performance.now();
+
+            let result;
+            try {
+                switch (algorithm) {
+                    case 'bfs': result = await bfs(); break;
+                    case 'dfs': result = await dfs(); break;
+                    case 'astar': result = await astar(); break;
+                    case 'dijkstra': result = await dijkstra(); break;
+                    case 'greedy': result = await greedy(); break;
+                    case 'bidirectional': result = await bidirectional(); break;
+                }
+            } catch (e) {
+                console.error('Algorithm error:', e);
+                shouldStop = true;
+                result = { path: null, visitedCount: 0 };
+            }
+
+            const endTime = performance.now();
+
+            if (shouldStop && result.path === null) {
+                updateStatus('Stopped by user', 'error');
+            } else if (result.path) {
+                await animatePath(result.path);
+                pathLengthEl.textContent = result.path.length;
+                const minPath = manhattanDistance(startNode, endNode) + 1;
+                const eff = Math.round((minPath / result.path.length) * 100);
+                efficiencyEl.textContent = eff + '%';
+                updateStatus('Path found!', 'success');
+            } else {
+                pathLengthEl.textContent = 'No Path';
+                efficiencyEl.textContent = '0%';
+                updateStatus('No path exists', 'error');
+            }
+
+            visitedCountEl.textContent = result.visitedCount;
+            timeTakenEl.textContent = Math.round(endTime - startTime) + 'ms';
+
+            isRunning = false;
+            shouldStop = false;
+            visualizeBtn.style.display = 'block';
+            stopBtn.style.display = 'none';
+            randomMazeBtn.disabled = false;
+            clearBtn.disabled = false;
+            clearPathBtn.disabled = false;
+            gridSizeSlider.disabled = false;
+            algorithmSelect.disabled = false;
+        }
+
+        function generateRandomMaze() {
+            if (isRunning) return;
+            clearPath();
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    if (!grid[row][col].isStart && !grid[row][col].isEnd) {
+                        const isWall = Math.random() < 0.3;
+                        grid[row][col].isWall = isWall;
+                        grid[row][col].element.classList.toggle('wall', isWall);
+                    }
+                }
+            }
+        }
+
+        function clearPath() {
+            resetPath();
+        }
+
+        function clearAll() {
+            if (isRunning) return;
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    grid[row][col].isWall = false;
+                    grid[row][col].element.classList.remove('wall', 'visited', 'path');
+                }
+            }
+            resetPath();
+        }
+
+        function stopVisualization() {
+            shouldStop = true;
+        }
+
+        algorithmSelect.addEventListener('change', () => {
+            document.querySelectorAll('.algorithm-info').forEach(info => info.classList.remove('active'));
+            document.getElementById(algorithmSelect.value + 'Info').classList.add('active');
+        });
+
+        speedSlider.addEventListener('input', () => {
+            const val = parseInt(speedSlider.value);
+            animationSpeed = Math.max(0, 100 - val);
+            batchSize = Math.max(1, Math.floor(val / 10));
+            speedValue.textContent = 'Speed: ' + val;
+        });
+
+        gridSizeSlider.addEventListener('input', () => {
+            gridSizeValue.textContent = gridSizeSlider.value + ' x ' + gridSizeSlider.value;
+        });
+
+        gridSizeSlider.addEventListener('change', () => {
+            if (isRunning) return;
+            rows = cols = parseInt(gridSizeSlider.value);
+            startNode = { row: Math.floor(rows * 0.15), col: Math.floor(cols * 0.15) };
+            endNode = { row: Math.floor(rows * 0.85), col: Math.floor(cols * 0.85) };
+            initGrid();
+            resetPath();
+        });
+
+        modeButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                modeButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentMode = btn.dataset.mode;
+            });
+        });
+
+        visualizeBtn.addEventListener('click', visualize);
+        stopBtn.addEventListener('click', stopVisualization);
+        randomMazeBtn.addEventListener('click', generateRandomMaze);
+        clearBtn.addEventListener('click', clearAll);
+        clearPathBtn.addEventListener('click', clearPath);
+        document.addEventListener('mouseup', () => isMouseDown = false);
+
+        initGrid();
+    </script>
+</body>
+</html>
